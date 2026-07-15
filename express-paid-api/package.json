@@ -1,0 +1,23 @@
+{
+  "name": "@ftptech/example-express-paid-api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Example: Express resource server gating a route behind Canton x402 payment.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "build": "echo 'examples are run-only, no build needed'",
+    "lint": "echo 'no lint'"
+  },
+  "dependencies": {
+    "@ftptech/x402-canton-core": "^0.6.0",
+    "@ftptech/x402-canton-express": "^0.2.2",
+    "express": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "tsx": "^4.19.2"
+  }
+}

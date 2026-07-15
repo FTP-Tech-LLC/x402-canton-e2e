@@ -17,8 +17,8 @@
 import {
   ensureWallet, RelayClient, claimAll,
   makePayingFetchForWallet, selfProvisionPreapproval,
-} from "../packages/agent-wallet/dist/index.js";
-import { decimalToAtomicCC } from "../packages/core/dist/index.js";
+} from "@ftptech/canton-agent-wallet";
+import { decimalToAtomicCC } from "@ftptech/x402-canton-core";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -34,7 +34,6 @@ const SYNC = E.SYNC || "global-domain::1220b1431ef217342db44d516bb9befde802be7d8
 const DSO = E.DSO || "DSO::1220b1431ef217342db44d516bb9befde802be7d8899637d290895fa58880f19accc";
 const AMOUNT = E.AMOUNT || "0.0100000000";
 const PORT = E.PORT || "3011";
-const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 async function main() {
   const relay = new RelayClient({ relayUrl, apiKey });
@@ -101,7 +100,7 @@ async function main() {
     CANTON_X402_PAYTO: merchant.party, X402_AMOUNT: decimalToAtomicCC(AMOUNT),
     X402_METHOD: "transfer-factory", NETWORK: NET,
   };
-  const exDir = join(repoRoot, "examples/express-paid-api");
+  const exDir = join(dirname(fileURLToPath(import.meta.url)), "express-paid-api");
   log("spawning express-paid-api on", PORT, "(method=transfer-factory, payTo=merchant)…");
   const srv = spawn(join(exDir, "node_modules/.bin/tsx"), ["src/server.ts"], { cwd: exDir, env, stdio: ["ignore", "pipe", "pipe"] });
   srv.stdout.on("data", (d) => process.stdout.write("  [express] " + d));
