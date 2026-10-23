@@ -4,11 +4,14 @@
   "private": true,
   "type": "module",
   "description": "End-to-end test of an x402 payment on Canton MainNet against a live facilitator.",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "e2e": "node tf-402-e2e.mjs"
   },
   "dependencies": {
-    "@ftptech/canton-agent-wallet": "^0.7.1",
-    "@ftptech/x402-canton-core": "^0.6.0"
+    "@ftptech/canton-agent-wallet": "^2.4.0",
+    "@ftptech/x402-canton-core": "^1.4.0"
   }
 }
