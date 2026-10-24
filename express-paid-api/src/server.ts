@@ -2,43 +2,29 @@
  * Example resource server that gates GET /api/data behind a
  * Canton x402 payment via cantonPaymentMiddleware.
  *
- * The middleware advertises this route's `accepts[]` in the 402 and relays the
- * client's payment to the facilitator's /verify + /settle. The single
- * `accepts[]` entry built below advertises the transfer-factory ("V3", 1-tx
- * meta-transaction) settlement method — the ONLY method the stack speaks: the
- * payer signs a relay-prepared TransferFactory_Transfer (receiver = this
- * merchant) and the facilitator relays it in ONE tx (facilitator-sponsored gas,
- * no custody). It requires THIS merchant to hold a live TransferPreapproval (else
- * the transfer Pends and /settle fails closed). The merchant sets it up once:
- * `canton-agent-wallet preapproval`. Ensure the facilitator serves it
- * (CANTON_X402_TF_ENABLED).
+ * The middleware answers 402 with this route's accepts[] and forwards the
+ * client's payment to the facilitator's /verify and /settle. The accepts[]
+ * entry uses the transfer-factory method: the payer signs a relay-prepared
+ * TransferFactory_Transfer to this merchant and the facilitator submits it in
+ * one transaction and pays the gas. The merchant must hold a live
+ * TransferPreapproval, created once with `canton-agent-wallet preapproval`.
  *
- * Configure via environment:
- *   PORT             — default 3000
- *   NETWORK          — CAIP-2 network, default canton:mainnet
- *   FACILITATOR_URL  — base URL of the facilitator the middleware calls,
- *                      default http://127.0.0.1:4123
+ * Environment:
+ *   PORT                    default 3000
+ *   NETWORK                 CAIP-2 network, default canton:mainnet
+ *   FACILITATOR_URL         facilitator base URL, default http://127.0.0.1:4123
+ *   X402_AMOUNT             atomic CC units (1 CC = 10^10), default 500000000 (0.05 CC)
+ *   CANTON_X402_PAYTO       merchant party id (accepts[].payTo)
+ *   CANTON_X402_FACILITATOR facilitator party id (extra.feePayer), from GET /supported signers
+ *   CANTON_SYNCHRONIZER_ID  Global Synchronizer id (extra.synchronizerId)
+ *   CANTON_X402_DSO         DSO party. Sets extra.instrumentId = { admin: <DSO>, id: "Amulet" }
+ *                           and asset = "<DSO>::Amulet". Required for a real payment.
+ *   EXECUTE_BEFORE_SECONDS  extra.executeBeforeSeconds, default 120
  *
- *   X402_AMOUNT            — atomic CC units (1 CC = 10^10), default "500000000" (0.05 CC)
- *   CANTON_X402_PAYTO      — merchant party id (= accepts[].payTo)
- *   CANTON_X402_FACILITATOR — facilitator party id (= extra.feePayer)
- *   CANTON_SYNCHRONIZER_ID  — Global Synchronizer id (= extra.synchronizerId)
- *   CANTON_X402_DSO         — instrument admin / DSO party. Sets
- *                             extra.instrumentId = { admin: <DSO>, id: "Amulet" }
- *                             and asset = "<DSO>::Amulet".
- *   EXECUTE_BEFORE_SECONDS  — extra.executeBeforeSeconds, default 120.
+ * Legacy aliases: PRICE, MERCHANT_PARTY, FACILITATOR_PARTY, SYNCHRONIZER_ID,
+ * INSTRUMENT_ADMIN.
  *
- * Legacy aliases still honored: PRICE → X402_AMOUNT, MERCHANT_PARTY →
- * CANTON_X402_PAYTO, FACILITATOR_PARTY → CANTON_X402_FACILITATOR,
- * SYNCHRONIZER_ID → CANTON_SYNCHRONIZER_ID, INSTRUMENT_ADMIN → CANTON_X402_DSO.
- *
- * Run (transfer-factory against a real facilitator):
- *   FACILITATOR_URL=https://facilitator.ftptech.xyz \
- *   CANTON_X402_FACILITATOR=facilitator::1220... \
- *   CANTON_SYNCHRONIZER_ID=global-domain::1220... \
- *   CANTON_X402_DSO=dso::1220... \
- *   CANTON_X402_PAYTO=merchant::1220... \
- *   pnpm --filter @ftptech/example-express-paid-api start
+ * Run with `npm start`. See README.md.
  */
 
 import express from "express";
@@ -73,10 +59,7 @@ const ASSET = `${INSTRUMENT_ADMIN}::${INSTRUMENT_ID}`;
 const NETWORK = (process.env.NETWORK ??
   "canton:mainnet") as PaymentRequirements["network"];
 
-// transfer-factory ("V3", 1-tx) is the ONLY settlement method: the payer signs a
-// relay-prepared TransferFactory_Transfer and the facilitator relays it in ONE
-// tx; requires THIS merchant to hold a live TransferPreapproval (else the
-// transfer Pends). EXECUTE_BEFORE_SECONDS → extra.executeBeforeSeconds.
+// How long the signed transfer stays valid (extra.executeBeforeSeconds).
 const EXECUTE_BEFORE_SECONDS = Number(process.env.EXECUTE_BEFORE_SECONDS ?? 120);
 
 function buildRequirements(): PaymentRequirements {

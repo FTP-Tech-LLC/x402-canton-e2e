@@ -4,20 +4,22 @@
   "private": true,
   "description": "Example: Express resource server gating a route behind Canton x402 payment.",
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "start": "tsx src/server.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --passWithNoTests",
-    "build": "echo 'examples are run-only, no build needed'",
-    "lint": "echo 'no lint'"
+    "start": "node --max-http-header-size=32768 --import tsx src/server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@ftptech/x402-canton-core": "^0.6.0",
-    "@ftptech/x402-canton-express": "^0.2.2",
+    "@ftptech/x402-canton-core": "^1.4.0",
+    "@ftptech/x402-canton-express": "^0.2.6",
     "express": "^5.0.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
-    "tsx": "^4.19.2"
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
   }
 }
